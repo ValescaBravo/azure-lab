@@ -818,7 +818,7 @@ ml_client = MLClient(
 )
 job = command(
     code=<span class="az-str">"./src"</span>,
-    command=<span class="az-str">"python train.py --data ${{inputs.training_data}}"</span>,
+    command=<span class="az-str">"python train.py --data \${{inputs.training_data}}"</span>,
     environment=<span class="az-str">"azureml:AzureML-sklearn-1.5-ubuntu20.04:1"</span>,
     compute=<span class="az-str">"cpu-cluster"</span>
 )
@@ -1104,16 +1104,14 @@ function CheatSheetTab() {
       {/* Naming conventions */}
       <div className="service-card p-5 mt-6">
         <h3 className="text-base font-semibold text-teal-DEFAULT mb-3">Naming conventions for Azure resources</h3>
-        <div className="code-block">
-          <span className="az-cmt"># Pattern: {type}-{workload}-{environment}-{sequence}</span>{'\n'}
-          <span className="az-teal">rg</span>-analytics-<span className="az-str">prod</span>-001       <span className="az-cmt"># Resource Group</span>{'\n'}
-          <span className="az-teal">st</span>datalakeprod001         <span className="az-cmt"># Storage (no hyphens, 3–24 chars)</span>{'\n'}
-          <span className="az-teal">syn</span>-analytics-<span className="az-str">prod</span>-001    <span className="az-cmt"># Synapse workspace</span>{'\n'}
-          <span className="az-teal">adf</span>-analytics-<span class="az-str">prod</span>-001    <span className="az-cmt"># Azure Data Factory</span>{'\n'}
-          <span className="az-teal">kv</span>-analytics-<span className="az-str">prod</span>-001      <span className="az-cmt"># Key Vault (3–24 chars)</span>{'\n'}
-          <span className="az-teal">fn</span>-ingest-campaigns-<span className="az-str">prod</span>  <span className="az-cmt"># Function App</span>{'\n'}
-          <span className="az-teal">law</span>-analytics-<span className="az-str">prod</span>-001    <span className="az-cmt"># Log Analytics Workspace</span>
-        </div>
+        <CodeBlock>{`<span class="az-cmt"># Pattern: {type}-{workload}-{environment}-{sequence}</span>
+<span class="az-teal">rg</span>-analytics-<span class="az-str">prod</span>-001       <span class="az-cmt"># Resource Group</span>
+<span class="az-teal">st</span>datalakeprod001         <span class="az-cmt"># Storage account (no hyphens, 3-24 chars)</span>
+<span class="az-teal">syn</span>-analytics-<span class="az-str">prod</span>-001    <span class="az-cmt"># Synapse workspace</span>
+<span class="az-teal">adf</span>-analytics-<span class="az-str">prod</span>-001    <span class="az-cmt"># Azure Data Factory</span>
+<span class="az-teal">kv</span>-analytics-<span class="az-str">prod</span>-001      <span class="az-cmt"># Key Vault (3-24 chars)</span>
+<span class="az-teal">fn</span>-ingest-campaigns-<span class="az-str">prod</span>  <span class="az-cmt"># Function App</span>
+<span class="az-teal">law</span>-analytics-<span class="az-str">prod</span>-001    <span class="az-cmt"># Log Analytics Workspace</span>`}</CodeBlock>
       </div>
     </div>
   );
