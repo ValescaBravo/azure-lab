@@ -1,0 +1,1505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Azure Cloud Lab — Valesca Bravo 2026</title>
+
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            navy: { DEFAULT: '#1d085e', light: '#2d1278', dark: '#130440' },
+            teal: { DEFAULT: '#13d6c1', dark: '#0a9a88', light: '#3de8d6' },
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Sora', sans-serif;
+      background: #09071a;
+      color: #e8e6f0;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    /* ---- SYNTAX: Azure CLI / Bicep / KQL ---- */
+    .code-block {
+      background: #1e1e1e;
+      border-radius: 10px;
+      padding: .9rem 1.1rem;
+      font-family: 'DM Mono', monospace;
+      font-size: .78rem;
+      line-height: 1.75;
+      overflow-x: auto;
+      border: 1px solid #2a2a3e;
+      white-space: pre;
+    }
+    .az-kw   { color: #569cd6; font-weight: 500; }
+    .az-teal { color: #4ec9b0; font-weight: 500; }
+    .az-str  { color: #ce9178; }
+    .az-cmt  { color: #6a9955; font-style: italic; }
+    .az-res  { color: #c792ea; }
+    .az-flag { color: #fb923c; }
+    .az-num  { color: #b5cea8; }
+
+    /* ---- SCROLLBAR ---- */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: #110e2e; }
+    ::-webkit-scrollbar-thumb { background: #13d6c1; border-radius: 3px; }
+    .tab-scroll { overflow-x: auto; scrollbar-width: thin; }
+    .tab-scroll::-webkit-scrollbar { height: 3px; }
+
+    /* ---- ANIMATIONS ---- */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp .32s ease forwards; }
+    @keyframes pulse-ring {
+      0%   { box-shadow: 0 0 0 0 rgba(19,214,193,.35); }
+      70%  { box-shadow: 0 0 0 10px rgba(19,214,193,0); }
+      100% { box-shadow: 0 0 0 0 rgba(19,214,193,0); }
+    }
+
+    /* ---- RANGE INPUT ---- */
+    input[type=range] {
+      -webkit-appearance: none;
+      height: 4px;
+      background: #221b56;
+      border-radius: 4px;
+      outline: none;
+      width: 100%;
+      cursor: pointer;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: #13d6c1;
+      cursor: pointer;
+    }
+
+    /* ---- CARDS ---- */
+    .service-card {
+      background: linear-gradient(135deg,#120a3a 0%,#0e0829 100%);
+      border: 1px solid #2a2060;
+      border-radius: 12px;
+      transition: border-color .2s, transform .2s;
+    }
+    .service-card:hover { border-color: #13d6c1; transform: translateY(-2px); }
+
+    /* ---- GDPR BADGE ---- */
+    .gdpr-badge {
+      background: #064e3b;
+      border: 1px solid #10b981;
+      color: #10b981;
+      border-radius: 9999px;
+      font-size: .65rem;
+      font-family: 'DM Mono', monospace;
+      padding: 2px 8px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    /* ---- TABS ---- */
+    .tab-btn {
+      white-space: nowrap;
+      padding: .45rem .9rem;
+      border-radius: 8px;
+      font-size: .78rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all .18s;
+      background: transparent;
+      color: #8b87b0;
+    }
+    .tab-btn.active {
+      background: #1d085e;
+      color: #13d6c1;
+      border-color: #13d6c1;
+    }
+    .tab-btn:hover:not(.active) { color: #e8e6f0; background: #16103a; }
+
+    /* ---- QUIZ ---- */
+    .quiz-opt {
+      background: #120a3a;
+      border: 1px solid #2a2060;
+      border-radius: 8px;
+      padding: .65rem 1rem;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+      font-size: .85rem;
+    }
+    .quiz-opt:hover  { border-color: #13d6c1; background: #1a1250; }
+    .quiz-opt.correct { border-color: #10b981; background: #064e3b20; color: #10b981; }
+    .quiz-opt.wrong   { border-color: #ef4444; background: #7f1d1d20; color: #f87171; }
+
+    /* ---- SVG DECISION TREE ---- */
+    .tree-node { cursor: pointer; transition: opacity .2s; }
+    .tree-node:hover { opacity: .85; }
+
+    /* ---- COMPARE TABLE ---- */
+    .cmp-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+    .cmp-table th, .cmp-table td {
+      border: 1px solid #2a2060;
+      padding: .6rem .75rem;
+      text-align: left;
+      vertical-align: top;
+    }
+    .cmp-table th { background: #1d085e; color: #13d6c1; font-weight: 600; }
+    .cmp-table tr:nth-child(even) td { background: #0e0829; }
+    .cmp-table .winner { color: #10b981; font-weight: 600; }
+    .cmp-table .neutral { color: #fbbf24; }
+  </style>
+</head>
+<body>
+
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useCallback } = React;
+
+/* ============================================================
+   CONSTANTS
+   ============================================================ */
+const TABS = [
+  { id:'fundamentals', label:'Azure Fundamentals' },
+  { id:'data',         label:'Data & Analytics' },
+  { id:'m365',         label:'Microsoft 365 Integration' },
+  { id:'compute',      label:'Compute' },
+  { id:'ai',           label:'AI & Cognitive Services' },
+  { id:'storage',      label:'Storage & Databases' },
+  { id:'cases',        label:'Real-World Cases' },
+  { id:'cheatsheet',   label:'Cheat Sheet' },
+];
+
+/* ============================================================
+   SHARED COMPONENTS
+   ============================================================ */
+function Chip({ children, color='teal' }) {
+  const cls = color === 'green'
+    ? 'gdpr-badge'
+    : 'inline-block text-xs font-mono px-2 py-0.5 rounded-full border border-teal-DEFAULT text-teal-DEFAULT bg-navy-light';
+  return <span className={cls}>{children}</span>;
+}
+
+function CodeBlock({ children }) {
+  return (
+    <div className="code-block text-xs" dangerouslySetInnerHTML={{ __html: children }} />
+  );
+}
+
+function SectionTitle({ children }) {
+  return (
+    <h2 className="text-xl font-bold text-white mb-1" style={{fontFamily:'Sora,sans-serif'}}>
+      {children}
+    </h2>
+  );
+}
+
+function ServiceCard({ title, badge, gdpr, children }) {
+  return (
+    <div className="service-card p-5 mb-4 fade-up">
+      <div className="flex flex-wrap items-center gap-2 mb-3">
+        <h3 className="text-base font-semibold text-teal-DEFAULT">{title}</h3>
+        {badge && <span className="text-xs font-mono px-2 py-0.5 rounded-full border border-purple-400 text-purple-300 bg-purple-900/20">{badge}</span>}
+        {gdpr && <span className="gdpr-badge">GDPR EU ✓</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function Label({ children }) {
+  return <p className="text-xs font-mono text-gray-400 uppercase tracking-widest mb-1">{children}</p>;
+}
+
+/* ============================================================
+   PHASE 2 — FUNDAMENTALS + DATA TABS
+   ============================================================ */
+function FundamentalsTab() {
+  const [openCard, setOpenCard] = useState(null);
+  const toggle = id => setOpenCard(openCard === id ? null : id);
+
+  const concepts = [
+    {
+      id:'sub', title:'Subscriptions & Resource Groups',
+      badge:'Core concept',
+      analogy:'A subscription is your company\'s account with Azure — the billing boundary. A resource group is like a project folder inside that account: everything related to a campaign analytics pipeline lives in one group, so you can delete or move it together.',
+      detail:'Resource groups are not just containers — they are the unit of management. You apply RBAC, tags, locks and policies at RG level. In practice, scope resource groups by lifecycle: dev/test resources in one RG, production in another.',
+      code:`<span class="az-cmt"># Create a resource group in Ireland (West Europe is Dublin)</span>
+<span class="az-kw">az</span> group <span class="az-flag">create</span> \
+  <span class="az-flag">--name</span> <span class="az-str">"rg-analytics-prod-001"</span> \
+  <span class="az-flag">--location</span> <span class="az-str">"westeurope"</span> \
+  <span class="az-flag">--tags</span> <span class="az-str">env=prod team=analytics gdpr=true</span>`,
+      cost:'Free — no charge for resource groups themselves.',
+      risk:'Mixing prod and dev resources in the same RG means a single accidental delete removes everything. Tag early; enforce with Azure Policy.',
+      gdpr: true
+    },
+    {
+      id:'aad', title:'Microsoft Entra ID (Azure AD)',
+      badge:'Identity',
+      analogy:'Entra ID is the identity layer that connects every Microsoft product. If your company already uses Microsoft 365 and you can sign into Teams with your work email, that\'s Entra ID already. Azure just extends the same directory to cloud resources.',
+      detail:'Every Azure subscription is backed by an Entra ID tenant. RBAC in Azure grants roles to Entra ID principals (users, groups, service principals). Use Managed Identities for app-to-service auth — no secrets in code.',
+      code:`<span class="az-cmt"># Assign Storage Blob Data Reader to a managed identity</span>
+<span class="az-kw">az</span> role assignment <span class="az-flag">create</span> \
+  <span class="az-flag">--assignee</span> <span class="az-res">&lt;managed-identity-object-id&gt;</span> \
+  <span class="az-flag">--role</span> <span class="az-str">"Storage Blob Data Reader"</span> \
+  <span class="az-flag">--scope</span> <span class="az-str">"/subscriptions/{sub}/resourceGroups/rg-analytics-prod-001"</span>`,
+      cost:'Entra ID Free included. P1 (€5.60/user/mo) for Conditional Access. P2 adds PIM.',
+      risk:'Using a shared service principal with Owner rights instead of Managed Identity leaks credentials and creates an unauditable attack surface.',
+      gdpr: true
+    },
+    {
+      id:'rbac', title:'RBAC vs ABAC',
+      badge:'Security',
+      analogy:'RBAC is a job title system: "Analyst" can read, "Engineer" can write, "Admin" can delete. ABAC adds conditions: "Analyst can read *only if* the resource is tagged env=prod and they are in the Ireland office."',
+      detail:'Azure RBAC uses role assignments (who, what role, what scope). Azure ABAC (Attribute-Based) extends RBAC with conditions, available on storage and a growing set of services. For GDPR data minimisation, ABAC lets you restrict access to EU-tagged datasets without creating separate roles.',
+      code:`<span class="az-cmt"># ABAC: allow read only on blobs tagged classification=public</span>
+<span class="az-kw">az</span> role assignment <span class="az-flag">create</span> \
+  <span class="az-flag">--assignee</span> <span class="az-str">"analyst@contoso.com"</span> \
+  <span class="az-flag">--role</span> <span class="az-str">"Storage Blob Data Reader"</span> \
+  <span class="az-flag">--scope</span> <span class="az-str">"/subscriptions/{sub}/resourceGroups/rg-analytics"</span> \
+  <span class="az-flag">--condition</span> <span class="az-str">"@Resource[Microsoft.Storage/storageAccounts/blobServices/containers/blobs/tags:classification]=='public'"</span> \
+  <span class="az-flag">--condition-version</span> <span class="az-str">"2.0"</span>`,
+      cost:'No extra cost. ABAC conditions are part of the RBAC system.',
+      risk:'Over-broad Owner assignments at subscription scope. Always assign the least-privileged built-in role at the narrowest scope possible.',
+      gdpr: true
+    },
+    {
+      id:'arm', title:'ARM vs Bicep (Infrastructure as Code)',
+      badge:'IaC',
+      analogy:'ARM templates are the raw JSON that Azure understands natively — verbose and powerful. Bicep is a domain-specific language that compiles to ARM, like TypeScript compiles to JavaScript. You write cleaner code, Azure receives the same JSON.',
+      detail:'Bicep is now the recommended IaC path for Azure. It supports modules, type safety and integrates with Azure DevOps and GitHub Actions pipelines. Terraform is also valid if you manage multi-cloud; for Azure-only teams Bicep reduces toolchain complexity.',
+      code:`<span class="az-cmt">// Bicep: deploy a storage account in westeurope</span>
+<span class="az-kw">param</span> <span class="az-res">location</span> <span class="az-teal">string</span> = <span class="az-str">'westeurope'</span>
+<span class="az-kw">param</span> <span class="az-res">storageName</span> <span class="az-teal">string</span>
+
+<span class="az-kw">resource</span> <span class="az-res">storage</span> <span class="az-str">'Microsoft.Storage/storageAccounts@2023-01-01'</span> = {
+  name: <span class="az-res">storageName</span>
+  location: <span class="az-res">location</span>
+  sku: { name: <span class="az-str">'Standard_LRS'</span> }
+  kind: <span class="az-str">'StorageV2'</span>
+  properties: {
+    minimumTlsVersion: <span class="az-str">'TLS1_2'</span>
+    allowBlobPublicAccess: <span class="az-num">false</span>
+    supportsHttpsTrafficOnly: <span class="az-num">true</span>
+  }
+}`,
+      cost:'Free. Bicep is open-source; ARM deployments have no charge beyond resource costs.',
+      risk:'Manually creating resources through the portal instead of IaC leads to config drift. Enforce ARM-only creation with Azure Policy in production subscriptions.',
+      gdpr: false
+    },
+  ];
+
+  return (
+    <div className="fade-up">
+      <SectionTitle>Azure Fundamentals</SectionTitle>
+      <p className="text-sm text-gray-400 mb-6 max-w-2xl">The building blocks every data professional needs before touching a single service. Governance first — services second.</p>
+
+      {concepts.map(c => (
+        <ServiceCard key={c.id} title={c.title} badge={c.badge} gdpr={c.gdpr}>
+          <p className="text-sm text-gray-300 mb-3" style={{borderLeft:'3px solid #13d6c1',paddingLeft:'12px',fontStyle:'italic'}}>{c.analogy}</p>
+          <button onClick={() => toggle(c.id)} className="text-xs font-mono text-teal-DEFAULT hover:text-white transition-colors mb-2 flex items-center gap-1" style={{background:'none',border:'none',cursor:'pointer',padding:0}}>
+            {openCard===c.id ? '▾ collapse' : '▸ details + code'}
+          </button>
+          {openCard===c.id && (
+            <div className="fade-up">
+              <p className="text-sm text-gray-300 mb-3">{c.detail}</p>
+              <CodeBlock>{c.code}</CodeBlock>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                <div className="rounded-lg p-3" style={{background:'#064e3b20',border:'1px solid #10b98140'}}>
+                  <Label>Cost</Label>
+                  <p className="text-xs text-green-300">{c.cost}</p>
+                </div>
+                <div className="rounded-lg p-3" style={{background:'#7f1d1d20',border:'1px solid #ef444440'}}>
+                  <Label>Common mistake</Label>
+                  <p className="text-xs text-red-300">{c.risk}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </ServiceCard>
+      ))}
+
+      {/* Management Groups diagram */}
+      <div className="service-card p-5 mt-2">
+        <h3 className="text-base font-semibold text-teal-DEFAULT mb-4">Scope hierarchy: Management Groups → Subscriptions → Resource Groups → Resources</h3>
+        <svg viewBox="0 0 560 160" className="w-full" style={{maxHeight:'160px'}}>
+          {[
+            {x:20, w:520, y:10, h:34, label:'Management Group (Root)', fill:'#1d085e', stroke:'#4c3aaa'},
+            {x:60, w:440, y:54, h:34, label:'Subscription (billing boundary)', fill:'#160a42', stroke:'#13d6c1'},
+            {x:100, w:360, y:98, h:34, label:'Resource Group (lifecycle unit)', fill:'#0e0829', stroke:'#0a9a88'},
+            {x:140, w:280, y:138, h:24, label:'Resources (VMs, DBs, Functions …)', fill:'#08061a', stroke:'#2a2060'},
+          ].map((r,i) => (
+            <g key={i}>
+              <rect x={r.x} y={r.y} width={r.w} height={r.h} rx="6" fill={r.fill} stroke={r.stroke} strokeWidth="1.5"/>
+              <text x={r.x+r.w/2} y={r.y+r.h/2+5} textAnchor="middle" fill="#e8e6f0" fontSize="11" fontFamily="Sora,sans-serif">{r.label}</text>
+            </g>
+          ))}
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+/* ---- DATA TAB ---- */
+function DataTab() {
+  const [activeNode, setActiveNode] = useState(null);
+
+  const mdwNodes = [
+    {id:'src',    x:30,  y:100, w:110, h:40, label:'Sources',        sub:'SQL Server, SharePoint, APIs', color:'#2d1278'},
+    {id:'adf',    x:175, y:80,  w:110, h:40, label:'Azure Data Factory', sub:'ELT orchestration', color:'#1d085e'},
+    {id:'adls',   x:320, y:60,  w:120, h:40, label:'ADLS Gen2',      sub:'Data Lake (raw → curated)', color:'#0a9a88'},
+    {id:'synapse',x:320, y:130, w:120, h:40, label:'Azure Synapse',  sub:'SQL + Spark unified', color:'#1d085e'},
+    {id:'pbi',    x:470, y:95,  w:100, h:40, label:'Power BI',       sub:'Direct Lake mode', color:'#13d6c1'},
+  ];
+  const arrows = [
+    {x1:140,y1:120,x2:175,y2:100},{x1:285,y1:95,x2:320,y2:75},
+    {x1:285,y1:95,x2:320,y2:145},{x1:440,y1:75,x2:470,y2:105},
+    {x1:440,y1:150,x2:470,y2:115},
+  ];
+
+  const services = [
+    {
+      id:'adf', title:'Azure Data Factory',
+      analogy:'ADF is like Power Query but for production pipelines at enterprise scale. You build data flows visually (no-code), schedule them, monitor runs, and connect to hundreds of sources — all managed, versioned and secured.',
+      code:`<span class="az-cmt"># Deploy ADF from Bicep</span>
+<span class="az-kw">resource</span> <span class="az-res">adf</span> <span class="az-str">'Microsoft.DataFactory/factories@2018-06-01'</span> = {
+  name: <span class="az-str">'adf-analytics-prod'</span>
+  location: <span class="az-str">'westeurope'</span>
+  identity: { type: <span class="az-str">'SystemAssigned'</span> }
+  properties: {
+    repoConfiguration: {
+      type: <span class="az-str">'FactoryGitHubConfiguration'</span>
+      repositoryName: <span class="az-str">'data-pipelines'</span>
+    }
+  }
+}`,
+      cost:'€0.001 per activity run. Orchestration: €0.25/1,000 runs. Data movement: €0.25/DIU-hour.',
+      risk:'Running pipelines without triggers on a schedule burns DIU hours. Always set activity timeouts and retry policies.',
+      gdpr:true, badge:'ETL / ELT'
+    },
+    {
+      id:'adls', title:'Azure Data Lake Storage Gen2',
+      analogy:'ADLS Gen2 is a folder structure with enterprise permissions bolted on top of Blob Storage. Think of it as OneDrive at petabyte scale, where every folder can have its own ACL and Spark can read it natively.',
+      code:`<span class="az-cmt"># Create container and upload raw data</span>
+<span class="az-kw">az</span> storage fs <span class="az-flag">create</span> \
+  <span class="az-flag">--name</span> <span class="az-str">raw</span> \
+  <span class="az-flag">--account-name</span> <span class="az-res">datalakeprod</span> \
+  <span class="az-flag">--auth-mode</span> <span class="az-str">login</span>
+
+<span class="az-kw">az</span> storage fs file <span class="az-flag">upload</span> \
+  <span class="az-flag">--source</span> <span class="az-str">./campaigns.parquet</span> \
+  <span class="az-flag">--path</span> <span class="az-str">marketing/2026/campaigns.parquet</span> \
+  <span class="az-flag">--file-system</span> <span class="az-str">raw</span> \
+  <span class="az-flag">--account-name</span> <span class="az-res">datalakeprod</span>`,
+      cost:'Hot tier: ~€0.018/GB/month. Cool: ~€0.01/GB/month. Transactions on top.',
+      risk:'Storing all data in the hot tier. Move data older than 30 days to cool/archive with lifecycle management policies.',
+      gdpr:true, badge:'Storage'
+    },
+    {
+      id:'synapse', title:'Azure Synapse Analytics',
+      analogy:'Synapse is the Swiss Army knife of Azure data. It combines a SQL data warehouse (Dedicated SQL Pool), serverless SQL against your data lake, Apache Spark for big data, and pipelines (ADF-based) — all in one unified workspace.',
+      code:`<span class="az-cmt">-- Serverless SQL: query parquet directly from ADLS</span>
+<span class="az-kw">SELECT</span>
+    campaign_name,
+    <span class="az-teal">SUM</span>(impressions)   <span class="az-kw">AS</span> total_impressions,
+    <span class="az-teal">SUM</span>(conversions)  <span class="az-kw">AS</span> total_conversions,
+    <span class="az-teal">ROUND</span>(<span class="az-teal">SUM</span>(spend) / <span class="az-teal">NULLIF</span>(<span class="az-teal">SUM</span>(conversions),<span class="az-num">0</span>), <span class="az-num">2</span>) <span class="az-kw">AS</span> cpa
+<span class="az-kw">FROM</span>
+    <span class="az-teal">OPENROWSET</span>(
+        <span class="az-teal">BULK</span> <span class="az-str">'https://datalakeprod.dfs.core.windows.net/curated/marketing/**'</span>,
+        <span class="az-teal">FORMAT</span> = <span class="az-str">'PARQUET'</span>
+    ) <span class="az-kw">AS</span> r
+<span class="az-kw">GROUP BY</span> campaign_name
+<span class="az-kw">ORDER BY</span> total_conversions <span class="az-kw">DESC</span>;`,
+      cost:'Dedicated SQL Pool: from €0.85/DWU100/hr. Serverless SQL: €4.65/TB scanned. Spark: €0.16/vCore-hr.',
+      risk:'Keeping Dedicated SQL Pool running 24/7 when you only query during business hours. Pause it outside working hours — saves 60–70% on compute.',
+      gdpr:true, badge:'Unified Analytics'
+    },
+    {
+      id:'databricks', title:'Databricks on Azure vs Synapse Spark',
+      analogy:'Both run Apache Spark. Databricks is the specialist tool: better Delta Lake support, MLflow built-in, collaborative notebooks, Unity Catalog for governance. Synapse Spark is convenient if your team is already in the Azure portal and the workload is moderate.',
+      code:`<span class="az-cmt"># When to choose: decision matrix</span>
+<span class="az-cmt"># Databricks → MLOps, Delta Live Tables, data science teams</span>
+<span class="az-cmt"># Synapse Spark → occasional Spark in an analytics-first team</span>
+<span class="az-cmt"># Cost: Databricks DBUs on top of VM cost vs Synapse vCore-hr</span>
+
+<span class="az-kw">%python</span>
+<span class="az-cmt"># Databricks: read Delta table from ADLS Gen2</span>
+df = spark.read.<span class="az-teal">format</span>(<span class="az-str">"delta"</span>).<span class="az-teal">load</span>(
+    <span class="az-str">"abfss://curated@datalakeprod.dfs.core.windows.net/marketing"</span>
+)
+df.<span class="az-teal">groupBy</span>(<span class="az-str">"channel"</span>).<span class="az-teal">agg</span>({<span class="az-str">"spend"</span>: <span class="az-str">"sum"</span>}).<span class="az-teal">show</span>()`,
+      cost:'Databricks: VM cost + DBU charge (€0.07–0.55/DBU depending on tier). Synapse Spark: €0.16/vCore-hr, no extra DBU.',
+      risk:'Running large Databricks clusters on Premium tier when Standard suffices for ETL. Rightsizing cluster type (Memory Optimised for ML, Compute Optimised for ETL) reduces costs significantly.',
+      gdpr:false, badge:'Spark'
+    },
+  ];
+
+  const [open2, setOpen2] = useState(null);
+
+  return (
+    <div className="fade-up">
+      <SectionTitle>Data & Analytics</SectionTitle>
+      <p className="text-sm text-gray-400 mb-5 max-w-2xl">The Modern Data Warehouse pattern in Azure — from raw ingestion to Power BI. Click each node in the diagram for details.</p>
+
+      {/* MDW Diagram */}
+      <div className="service-card p-4 mb-6">
+        <Label>Modern Data Warehouse — Azure reference architecture</Label>
+        <svg viewBox="0 0 600 200" className="w-full" style={{maxHeight:'200px'}}>
+          <defs>
+            <marker id="arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+              <path d="M0,0 L6,3 L0,6 Z" fill="#13d6c1" />
+            </marker>
+          </defs>
+          {arrows.map((a,i) => (
+            <line key={i} x1={a.x1} y1={a.y1} x2={a.x2} y2={a.y2}
+              stroke="#13d6c1" strokeWidth="1.5" strokeDasharray="4 3"
+              markerEnd="url(#arr)" opacity=".7" />
+          ))}
+          {mdwNodes.map(n => (
+            <g key={n.id} className="tree-node" onClick={() => setActiveNode(activeNode===n.id?null:n.id)}>
+              <rect x={n.x} y={n.y} width={n.w} height={n.h} rx="7"
+                fill={activeNode===n.id?'#13d6c120':n.color}
+                stroke={activeNode===n.id?'#13d6c1':'#3a2a7a'} strokeWidth="1.5"/>
+              <text x={n.x+n.w/2} y={n.y+14} textAnchor="middle" fill="#fff" fontSize="9.5" fontFamily="Sora,sans-serif" fontWeight="600">{n.label}</text>
+              <text x={n.x+n.w/2} y={n.y+27} textAnchor="middle" fill="#9ca3af" fontSize="8" fontFamily="DM Mono,monospace">{n.sub}</text>
+            </g>
+          ))}
+        </svg>
+        {activeNode && (
+          <p className="text-xs font-mono text-teal-DEFAULT mt-2">
+            {mdwNodes.find(n=>n.id===activeNode)?.label} selected — see service card below.
+          </p>
+        )}
+      </div>
+
+      {services.map(s => (
+        <ServiceCard key={s.id} title={s.title} badge={s.badge} gdpr={s.gdpr}>
+          <p className="text-sm text-gray-300 mb-3" style={{borderLeft:'3px solid #13d6c1',paddingLeft:'12px',fontStyle:'italic'}}>{s.analogy}</p>
+          <button onClick={() => setOpen2(open2===s.id?null:s.id)} className="text-xs font-mono text-teal-DEFAULT hover:text-white transition-colors mb-2" style={{background:'none',border:'none',cursor:'pointer',padding:0}}>
+            {open2===s.id ? '▾ collapse' : '▸ code + costs'}
+          </button>
+          {open2===s.id && (
+            <div className="fade-up">
+              <CodeBlock>{s.code}</CodeBlock>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                <div className="rounded-lg p-3" style={{background:'#064e3b20',border:'1px solid #10b98140'}}>
+                  <Label>Cost</Label><p className="text-xs text-green-300">{s.cost}</p>
+                </div>
+                <div className="rounded-lg p-3" style={{background:'#7f1d1d20',border:'1px solid #ef444440'}}>
+                  <Label>Common mistake</Label><p className="text-xs text-red-300">{s.risk}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </ServiceCard>
+      ))}
+    </div>
+  );
+}
+
+/* ============================================================
+   PHASE 3 — M365 + COMPUTE TABS
+   ============================================================ */
+function M365Tab() {
+  const [open, setOpen] = useState(null);
+  const items = [
+    {
+      id:'pbi', title:'Power BI + Azure Synapse Direct Lake',
+      badge:'Analytics', gdpr:true,
+      analogy:'Direct Lake mode lets Power BI read Delta/Parquet files directly from ADLS Gen2 without importing data. Think of it as a live Excel connection to your data lake — no scheduled refresh, no import lag, no storage duplication.',
+      detail:'Direct Lake is available in Microsoft Fabric (Synapse-based). For classic Azure Synapse: use DirectQuery to Synapse Serverless SQL Pool. Both approaches eliminate the nightly refresh cycle that breaks dashboards at 7am when the board is watching.',
+      code:`<span class="az-cmt">-- Create a Synapse serverless view that Power BI connects to via DirectQuery</span>
+<span class="az-kw">CREATE</span> <span class="az-kw">OR ALTER</span> <span class="az-kw">VIEW</span> <span class="az-res">marketing</span>.<span class="az-teal">campaign_performance</span> <span class="az-kw">AS</span>
+<span class="az-kw">SELECT</span>
+    campaign_name,
+    channel,
+    <span class="az-teal">CAST</span>(report_date <span class="az-kw">AS</span> DATE)    <span class="az-kw">AS</span> report_date,
+    <span class="az-teal">SUM</span>(spend)                      <span class="az-kw">AS</span> spend,
+    <span class="az-teal">SUM</span>(conversions)               <span class="az-kw">AS</span> conversions,
+    <span class="az-teal">SUM</span>(revenue)                    <span class="az-kw">AS</span> revenue
+<span class="az-kw">FROM</span>
+    <span class="az-teal">OPENROWSET</span>(
+        <span class="az-teal">BULK</span> <span class="az-str">'https://datalakeprod.dfs.core.windows.net/curated/marketing/campaigns/**'</span>,
+        <span class="az-teal">FORMAT</span> = <span class="az-str">'PARQUET'</span>
+    ) r
+<span class="az-kw">GROUP BY</span> campaign_name, channel, <span class="az-teal">CAST</span>(report_date <span class="az-kw">AS</span> DATE);`,
+      cost:'DirectQuery is free on the Azure side. Synapse Serverless SQL charges €4.65/TB scanned — use partition pruning to minimise scans.',
+      risk:'Running DirectQuery reports with no row limit during peak hours causes full table scans. Add WHERE clauses on date columns and enable result-set caching in Synapse.',
+    },
+    {
+      id:'excel', title:'Excel connected to Azure SQL & Synapse',
+      badge:'Self-service', gdpr:true,
+      analogy:'Excel can connect directly to Azure SQL Database as a data source via Get Data → Azure. The analyst gets a live connection, refreshable on demand, backed by enterprise security — no CSV exports, no stale spreadsheets.',
+      detail:'Use Power Query in Excel with the Azure SQL connector. For large datasets, push aggregations to Azure SQL via query folding so Excel receives pre-aggregated results. Combine with Sensitivity Labels (Purview) to auto-classify GDPR-sensitive spreadsheets.',
+      code:`<span class="az-cmt">/* Azure SQL: create a view for Excel analysts */</span>
+<span class="az-kw">CREATE</span> <span class="az-kw">VIEW</span> <span class="az-res">reporting</span>.<span class="az-teal">marketing_summary</span>
+<span class="az-kw">WITH</span> SCHEMABINDING
+<span class="az-kw">AS</span>
+<span class="az-kw">SELECT</span>
+    campaign_id,
+    channel,
+    <span class="az-teal">FORMAT</span>(report_month, <span class="az-str">'yyyy-MM'</span>) <span class="az-kw">AS</span> month,
+    <span class="az-teal">SUM</span>(spend)          <span class="az-kw">AS</span> total_spend,
+    <span class="az-teal">SUM</span>(conversions)   <span class="az-kw">AS</span> total_conversions
+<span class="az-kw">FROM</span> <span class="az-res">dbo</span>.<span class="az-teal">campaign_facts</span>
+<span class="az-kw">GROUP BY</span> campaign_id, channel, <span class="az-teal">FORMAT</span>(report_month, <span class="az-str">'yyyy-MM'</span>);`,
+      cost:'Azure SQL Database: from €14/mo (Basic). General Purpose 2 vCores: ~€260/mo. No extra cost for Excel connections.',
+      risk:'Analysts connecting Excel directly to production OLTP databases causes lock contention. Always connect to a read replica or a reporting schema.',
+    },
+    {
+      id:'gdpr365', title:'GDPR in Ireland: why Azure defaults for EU companies',
+      badge:'Compliance', gdpr:true,
+      analogy:'Ireland is home to the DPC — the Lead Supervisory Authority for Meta, Google, Apple, LinkedIn and TikTok. Companies storing EU citizen data under GDPR face Irish enforcement actions. Azure\'s EU data boundary and sovereign regions make compliance auditable.',
+      detail:'Azure EU Data Boundary (launched 2023) guarantees that data from EU/EEA customers stays within EU borders, including diagnostic logs and support data. No equivalent commitment exists in AWS or GCP at this scope. For Microsoft 365 tenants already in the EU, Azure extends the same boundary to cloud workloads.',
+      code:`<span class="az-cmt"># Enforce EU-only resource deployment via Azure Policy</span>
+<span class="az-kw">az</span> policy assignment <span class="az-flag">create</span> \
+  <span class="az-flag">--name</span> <span class="az-str">"AllowedLocations-EU"</span> \
+  <span class="az-flag">--scope</span> <span class="az-str">"/subscriptions/{sub}"</span> \
+  <span class="az-flag">--policy</span> <span class="az-str">"e56962a6-4747-49cd-b67b-bf8b01975c4c"</span> \
+  <span class="az-flag">--params</span> <span class="az-str">'{"listOfAllowedLocations":{"value":["westeurope","northeurope","swedencentral"]}}'</span>
+<span class="az-cmt"># westeurope = Netherlands · northeurope = Ireland · swedencentral = Stockholm</span>`,
+      cost:'Azure Policy itself is free. Costs are the resources within policy scope.',
+      risk:'Deploying resources in eastus or global locations without a policy guard — data residency violation under GDPR Art. 46. Enforce at management group level, not per subscription.',
+    },
+    {
+      id:'sp', title:'SharePoint as ADF Source',
+      badge:'Connectors', gdpr:false,
+      analogy:'Marketing teams store campaign briefs, budget trackers and approval workflows in SharePoint. ADF can pull that data into the data lake using the SharePoint Online List connector — no manual exports, no email attachments.',
+      detail:'Use the SharePoint Online List linked service in ADF. Authenticate with a service principal registered in Entra ID. Limit permissions to the specific SharePoint site — do not use delegated user credentials in pipelines.',
+      code:`<span class="az-cmt">// ADF Linked Service: SharePoint Online (Bicep fragment)</span>
+{
+  <span class="az-str">"type"</span>: <span class="az-str">"SharePointOnlineList"</span>,
+  <span class="az-str">"typeProperties"</span>: {
+    <span class="az-str">"siteUrl"</span>: <span class="az-str">"https://contoso.sharepoint.com/sites/marketing"</span>,
+    <span class="az-str">"tenantId"</span>: <span class="az-str">"@{linkedService().tenantId}"</span>,
+    <span class="az-str">"servicePrincipalId"</span>: <span class="az-str">"@{linkedService().spId}"</span>,
+    <span class="az-str">"servicePrincipalKey"</span>: {
+      <span class="az-str">"type"</span>: <span class="az-str">"AzureKeyVaultSecret"</span>,
+      <span class="az-str">"store"</span>: { <span class="az-str">"referenceName"</span>: <span class="az-str">"AKV-prod"</span>, <span class="az-str">"type"</span>: <span class="az-str">"LinkedServiceReference"</span> },
+      <span class="az-str">"secretName"</span>: <span class="az-str">"sp-sharepoint-secret"</span>
+    }
+  }
+}`,
+      cost:'SharePoint connector in ADF: €0.001 per activity run.',
+      risk:'Hardcoding service principal secrets in ADF linked services. Always use Azure Key Vault references.',
+    },
+  ];
+  return (
+    <div className="fade-up">
+      <SectionTitle>Microsoft 365 Integration</SectionTitle>
+      <p className="text-sm text-gray-400 mb-5 max-w-2xl">Azure and Microsoft 365 share the same identity layer, compliance framework and data boundary. For EU companies this is a structural advantage, not a preference.</p>
+      {items.map(s => (
+        <ServiceCard key={s.id} title={s.title} badge={s.badge} gdpr={s.gdpr}>
+          <p className="text-sm text-gray-300 mb-3" style={{borderLeft:'3px solid #13d6c1',paddingLeft:'12px',fontStyle:'italic'}}>{s.analogy}</p>
+          <button onClick={() => setOpen(open===s.id?null:s.id)} className="text-xs font-mono text-teal-DEFAULT hover:text-white transition-colors mb-2" style={{background:'none',border:'none',cursor:'pointer',padding:0}}>
+            {open===s.id ? '▾ collapse' : '▸ details + code'}
+          </button>
+          {open===s.id && (
+            <div className="fade-up">
+              <p className="text-sm text-gray-300 mb-3">{s.detail}</p>
+              <CodeBlock>{s.code}</CodeBlock>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                <div className="rounded-lg p-3" style={{background:'#064e3b20',border:'1px solid #10b98140'}}><Label>Cost</Label><p className="text-xs text-green-300">{s.cost}</p></div>
+                <div className="rounded-lg p-3" style={{background:'#7f1d1d20',border:'1px solid #ef444440'}}><Label>Common mistake</Label><p className="text-xs text-red-300">{s.risk}</p></div>
+              </div>
+            </div>
+          )}
+        </ServiceCard>
+      ))}
+    </div>
+  );
+}
+
+/* ---- COMPUTE TAB ---- */
+function ComputeTab() {
+  const [answers, setAnswers] = useState({});
+  const [open, setOpen] = useState(null);
+
+  const questions = [
+    { id:'q1', text:'Does it run for more than a few minutes continuously?', yes:'q2', no:'func', noLabel:'Azure Functions' },
+    { id:'q2', text:'Does it need to scale automatically to zero when idle?', yes:'q3', no:'appSvc', noLabel:'App Service' },
+    { id:'q3', text:'Is it containerised?', yes:'q4', no:'appSvc', noLabel:'App Service (code deploy)' },
+    { id:'q4', text:'Does it need full Kubernetes orchestration (sidecars, service mesh)?', yes:'aks', no:'aca', yesLabel:'AKS', noLabel:'Container Apps' },
+  ];
+  const results = {
+    func:   { label:'Azure Functions', desc:'Event-driven, serverless. Pay per execution. Best for webhooks, ETL triggers, lightweight APIs.', color:'#0a9a88' },
+    appSvc: { label:'App Service',     desc:'Managed PaaS for web apps and APIs. Predictable cost, built-in CI/CD from GitHub. Best for always-on services.', color:'#1d085e' },
+    aca:    { label:'Container Apps',  desc:'Serverless containers with auto-scale to zero. No Kubernetes knowledge required. Best for microservices and background jobs.', color:'#13d6c1' },
+    aks:    { label:'AKS',             desc:'Full Kubernetes. Full control, full responsibility. Best for complex multi-service architectures with dedicated SRE teams.', color:'#c792ea' },
+  };
+
+  function answer(qId, val) {
+    const q = questions.find(x=>x.id===qId);
+    const next = val==='yes' ? q.yes : q.no;
+    setAnswers(prev => ({...prev, [qId]:val, _current: next}));
+  }
+  function reset() { setAnswers({}); }
+
+  const current = answers._current || 'q1';
+  const q = questions.find(x=>x.id===current);
+  const result = results[current];
+
+  const services = [
+    {
+      id:'func', title:'Azure Functions',
+      badge:'Serverless', gdpr:false,
+      analogy:'Functions are the IFTTT of Azure: trigger on an event, run a small piece of code, stop. Perfect for sending a Slack notification when a Power BI refresh fails, or processing incoming webhook data from a marketing platform.',
+      code:`<span class="az-cmt"># Python Azure Function: process Marketing API webhook</span>
+<span class="az-kw">import</span> azure.functions <span class="az-kw">as</span> func
+<span class="az-kw">import</span> json, logging
+
+app = func.FunctionApp()
+
+@app.function_name(<span class="az-str">"ProcessWebhook"</span>)
+@app.route(route=<span class="az-str">"webhook"</span>, methods=[<span class="az-str">"POST"</span>])
+<span class="az-kw">def</span> <span class="az-teal">process_webhook</span>(req: func.HttpRequest) -> func.HttpResponse:
+    payload = req.get_json()
+    logging.info(<span class="az-str">f"Event: {payload.get('event_type')}"</span>)
+    <span class="az-kw">return</span> func.HttpResponse(<span class="az-str">"OK"</span>, status_code=<span class="az-num">200</span>)`,
+      cost:'First 1M executions/month free. Then €0.169 per million executions.',
+      risk:'Functions with no execution timeout limit + infinite retry loops. Set function timeout and dead-letter queues.',
+    },
+    {
+      id:'devops', title:'Azure DevOps vs GitHub Actions',
+      badge:'CI/CD', gdpr:false,
+      analogy:'GitHub Actions is the GitHub-native CI/CD — write a YAML file in your repo and pushes trigger builds. Azure DevOps is the older, more feature-rich platform with Boards, Repos, Pipelines and Artifacts in one place. Most new Azure-first teams use GitHub Actions; enterprises migrating from on-prem TFS use Azure DevOps.',
+      code:`<span class="az-cmt"># GitHub Actions: deploy Bicep to Azure on push to main</span>
+<span class="az-kw">name</span>: Deploy Infrastructure
+<span class="az-kw">on</span>:
+  push:
+    branches: [main]
+<span class="az-kw">jobs</span>:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/login@v2
+        with:
+          client-id: \${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: \${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: \${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - uses: azure/arm-deploy@v2
+        with:
+          resourceGroupName: rg-analytics-prod-001
+          template: ./infra/main.bicep`,
+      cost:'GitHub Actions: 2,000 min/month free (public repos unlimited). Azure DevOps: 1 free parallel job, extra at ~€30/job/month.',
+      risk:'Storing Azure credentials as GitHub secrets without Federated Identity (OIDC). Use Workload Identity Federation to eliminate long-lived secrets entirely.',
+    },
+  ];
+
+  return (
+    <div className="fade-up">
+      <SectionTitle>Compute</SectionTitle>
+      <p className="text-sm text-gray-400 mb-5 max-w-2xl">Azure Functions, App Service, Container Apps, AKS — each exists because the previous one hit a limit. Use the decision tree to find yours.</p>
+
+      {/* Decision tree */}
+      <div className="service-card p-5 mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-base font-semibold text-teal-DEFAULT">Which compute service should I use?</h3>
+          {Object.keys(answers).length > 0 && (
+            <button onClick={reset} className="text-xs font-mono text-gray-400 hover:text-teal-DEFAULT transition-colors" style={{background:'none',border:'none',cursor:'pointer'}}>↺ restart</button>
+          )}
+        </div>
+
+        {result ? (
+          <div className="fade-up rounded-xl p-5 text-center" style={{background:result.color+'20',border:`2px solid ${result.color}`}}>
+            <p className="text-2xl font-bold mb-2" style={{color:result.color}}>{result.label}</p>
+            <p className="text-sm text-gray-300">{result.desc}</p>
+            <button onClick={reset} className="mt-4 text-xs font-mono px-3 py-1.5 rounded-lg" style={{background:'#1d085e',border:'1px solid #13d6c1',color:'#13d6c1',cursor:'pointer'}}>Start over</button>
+          </div>
+        ) : q ? (
+          <div className="fade-up">
+            <p className="text-sm text-gray-200 mb-4 font-semibold">{q.text}</p>
+            <div className="flex gap-3 flex-wrap">
+              <button onClick={() => answer(q.id,'yes')}
+                className="px-4 py-2 rounded-lg text-sm font-semibold transition-all"
+                style={{background:'#13d6c120',border:'1px solid #13d6c1',color:'#13d6c1',cursor:'pointer'}}>
+                Yes {q.yesLabel ? `→ ${q.yesLabel}` : ''}
+              </button>
+              <button onClick={() => answer(q.id,'no')}
+                className="px-4 py-2 rounded-lg text-sm font-semibold transition-all"
+                style={{background:'#1d085e30',border:'1px solid #4c3aaa',color:'#c4b5fd',cursor:'pointer'}}>
+                No → {q.noLabel}
+              </button>
+            </div>
+          </div>
+        ) : null}
+
+        {/* Progress trail */}
+        {Object.keys(answers).filter(k=>k!=='_current').length > 0 && (
+          <div className="mt-4 flex flex-wrap gap-1.5">
+            {Object.entries(answers).filter(([k])=>k!=='_current').map(([k,v]) => (
+              <span key={k} className="text-xs font-mono px-2 py-0.5 rounded" style={{background:'#2a2060',color:'#8b87b0'}}>
+                {k}: {v}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {services.map(s => (
+        <ServiceCard key={s.id} title={s.title} badge={s.badge} gdpr={s.gdpr}>
+          <p className="text-sm text-gray-300 mb-3" style={{borderLeft:'3px solid #13d6c1',paddingLeft:'12px',fontStyle:'italic'}}>{s.analogy}</p>
+          <button onClick={() => setOpen(open===s.id?null:s.id)} className="text-xs font-mono text-teal-DEFAULT hover:text-white transition-colors mb-2" style={{background:'none',border:'none',cursor:'pointer',padding:0}}>
+            {open===s.id ? '▾ collapse' : '▸ code + costs'}
+          </button>
+          {open===s.id && (
+            <div className="fade-up">
+              <CodeBlock>{s.code}</CodeBlock>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                <div className="rounded-lg p-3" style={{background:'#064e3b20',border:'1px solid #10b98140'}}><Label>Cost</Label><p className="text-xs text-green-300">{s.cost}</p></div>
+                <div className="rounded-lg p-3" style={{background:'#7f1d1d20',border:'1px solid #ef444440'}}><Label>Common mistake</Label><p className="text-xs text-red-300">{s.risk}</p></div>
+              </div>
+            </div>
+          )}
+        </ServiceCard>
+      ))}
+    </div>
+  );
+}
+
+/* ============================================================
+   PHASE 4 — AI + STORAGE + CASES + CHEATSHEET TABS
+   ============================================================ */
+function AITab() {
+  const [open, setOpen] = useState(null);
+  const items = [
+    {
+      id:'aoai', title:'Azure OpenAI Service',
+      badge:'Generative AI', gdpr:true,
+      analogy:'Same models as OpenAI (GPT-4o, o1, DALL-E) but deployed inside your Azure subscription — your data never trains OpenAI\'s models and stays in your EU region. For EU companies under GDPR, this is the compliant path to LLM-powered features.',
+      code:`<span class="az-cmt"># Python: call Azure OpenAI GPT-4o for sentiment analysis</span>
+<span class="az-kw">from</span> openai <span class="az-kw">import</span> AzureOpenAI
+
+client = AzureOpenAI(
+    azure_endpoint=<span class="az-str">"https://my-aoai.openai.azure.com/"</span>,
+    api_version=<span class="az-str">"2024-10-21"</span>,
+    azure_deployment=<span class="az-str">"gpt-4o"</span>
+)
+response = client.chat.completions.create(
+    model=<span class="az-str">"gpt-4o"</span>,
+    messages=[
+      {<span class="az-str">"role"</span>:<span class="az-str">"system"</span>, <span class="az-str">"content"</span>:<span class="az-str">"Classify sentiment as positive/neutral/negative. Return JSON only."</span>},
+      {<span class="az-str">"role"</span>:<span class="az-str">"user"</span>,   <span class="az-str">"content"</span>: review_text}
+    ]
+)`,
+      cost:'GPT-4o: €2.50/1M input tokens, €10/1M output tokens. PTU (Provisioned Throughput) for predictable latency: from €1,500/PTU/month.',
+      risk:'Not setting content filtering policies — Azure OpenAI has built-in content filters. Disabling them without documented risk assessment violates enterprise AI governance.',
+    },
+    {
+      id:'aml', title:'Azure Machine Learning',
+      badge:'MLOps', gdpr:true,
+      analogy:'Azure ML is the end-to-end platform for training, tracking, registering and deploying ML models. If you\'ve used scikit-learn in a Jupyter notebook, AML gives that experiment a production home: versioned datasets, experiment tracking, model registry, and managed endpoints.',
+      code:`<span class="az-cmt"># AML SDK v2: submit a training job</span>
+<span class="az-kw">from</span> azure.ai.ml <span class="az-kw">import</span> MLClient, command
+<span class="az-kw">from</span> azure.identity <span class="az-kw">import</span> DefaultAzureCredential
+
+ml_client = MLClient(
+    DefaultAzureCredential(),
+    subscription_id=<span class="az-str">"&lt;sub&gt;"</span>,
+    resource_group_name=<span class="az-str">"rg-mlops-prod"</span>,
+    workspace_name=<span class="az-str">"aml-ws-prod"</span>
+)
+job = command(
+    code=<span class="az-str">"./src"</span>,
+    command=<span class="az-str">"python train.py --data ${{inputs.training_data}}"</span>,
+    environment=<span class="az-str">"azureml:AzureML-sklearn-1.5-ubuntu20.04:1"</span>,
+    compute=<span class="az-str">"cpu-cluster"</span>
+)
+ml_client.jobs.create_or_update(job)`,
+      cost:'Compute charged separately. Workspace itself: free. Model registry: free up to 500 models. Managed Online Endpoints: from €0.07/hr per DS2v2 instance.',
+      risk:'Leaving compute clusters running between training jobs. Set min_instances=0 on all clusters; scale-to-zero has ~2 min cold start but eliminates idle cost.',
+    },
+    {
+      id:'mktg', title:'AI for Marketing: practical use cases',
+      badge:'Applied AI', gdpr:true,
+      analogy:'The three highest-ROI AI applications in marketing analytics teams today: sentiment analysis on support tickets (classify and route automatically), content generation for ad copy variants (test 20 headlines instead of 2), and campaign performance anomaly detection (alert when CPA spikes before the human sees it).',
+      code:`<span class="az-cmt">-- KQL: detect campaign anomalies in Application Insights</span>
+<span class="az-res">customEvents</span>
+<span class="az-kw">| where</span> name == <span class="az-str">"CampaignMetric"</span>
+<span class="az-kw">| extend</span>
+    campaign = tostring(customDimensions.<span class="az-teal">campaign_id</span>),
+    cpa      = todouble(customMeasurements.<span class="az-teal">cost_per_acquisition</span>)
+<span class="az-kw">| summarize</span>
+    avg_cpa = avg(cpa),
+    stddev  = stdev(cpa)
+    <span class="az-kw">by</span> campaign, bin(timestamp, <span class="az-num">1</span>h)
+<span class="az-kw">| where</span> avg_cpa > (avg_cpa + <span class="az-num">2</span> * stddev)
+<span class="az-kw">| project</span> timestamp, campaign, avg_cpa`,
+      cost:'Language service (sentiment): €0.65/1,000 records. Azure OpenAI content generation: see AOAI pricing. Application Insights: €2.30/GB ingested.',
+      risk:'Running AI inference on raw PII without pseudonymisation. Under GDPR Art. 22, automated decision-making on personal data requires a legal basis. Anonymise before sending to AI services.',
+    },
+  ];
+
+  return (
+    <div className="fade-up">
+      <SectionTitle>AI & Cognitive Services</SectionTitle>
+      <p className="text-sm text-gray-400 mb-5 max-w-2xl">Azure's AI services sit inside your subscription, your compliance boundary, and your EU data residency. The OpenAI API doesn't.</p>
+      <div className="mb-5 rounded-xl p-4" style={{background:'#064e3b20',border:'1px solid #10b981'}}>
+        <p className="text-sm text-green-300 font-semibold mb-1">EU AI Act timeline — 2026 context</p>
+        <p className="text-xs text-gray-300">Prohibited practices banned Feb 2025. GPAI model obligations active Aug 2025. High-risk system requirements and transparency obligations under Art. 50 apply from 2 August 2026. Azure AI Services ship responsible AI content filters aligned with these requirements.</p>
+      </div>
+      {items.map(s => (
+        <ServiceCard key={s.id} title={s.title} badge={s.badge} gdpr={s.gdpr}>
+          <p className="text-sm text-gray-300 mb-3" style={{borderLeft:'3px solid #13d6c1',paddingLeft:'12px',fontStyle:'italic'}}>{s.analogy}</p>
+          <button onClick={() => setOpen(open===s.id?null:s.id)} className="text-xs font-mono text-teal-DEFAULT hover:text-white transition-colors mb-2" style={{background:'none',border:'none',cursor:'pointer',padding:0}}>
+            {open===s.id?'▾ collapse':'▸ code + costs'}
+          </button>
+          {open===s.id && (
+            <div className="fade-up">
+              <CodeBlock>{s.code}</CodeBlock>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                <div className="rounded-lg p-3" style={{background:'#064e3b20',border:'1px solid #10b98140'}}><Label>Cost</Label><p className="text-xs text-green-300">{s.cost}</p></div>
+                <div className="rounded-lg p-3" style={{background:'#7f1d1d20',border:'1px solid #ef444440'}}><Label>Common mistake</Label><p className="text-xs text-red-300">{s.risk}</p></div>
+              </div>
+            </div>
+          )}
+        </ServiceCard>
+      ))}
+    </div>
+  );
+}
+
+function StorageTab() {
+  const [open, setOpen] = useState(null);
+  const items = [
+    {
+      id:'blob', title:'Blob Storage vs ADLS Gen2 vs Azure Files',
+      badge:'Object Storage', gdpr:true,
+      analogy:'Blob Storage is an S3-equivalent: store any file, access via URL. ADLS Gen2 is Blob Storage with a hierarchical namespace and enterprise ACLs — same cost, better for analytics workloads. Azure Files is a managed SMB/NFS file share: mount it like a network drive on any VM or container.',
+      code:`<span class="az-cmt"># Choose based on access pattern</span>
+<span class="az-cmt"># Blob/ADLS Gen2: Spark, ADF, Power BI, web apps</span>
+<span class="az-cmt"># Azure Files: lift-and-shift apps that need a shared drive</span>
+
+<span class="az-kw">az</span> storage account <span class="az-flag">create</span> \
+  <span class="az-flag">--name</span> <span class="az-res">datalakeprod</span> \
+  <span class="az-flag">--resource-group</span> <span class="az-str">rg-analytics-prod-001</span> \
+  <span class="az-flag">--location</span> <span class="az-str">northeurope</span> \
+  <span class="az-flag">--sku</span> <span class="az-str">Standard_LRS</span> \
+  <span class="az-flag">--kind</span> <span class="az-str">StorageV2</span> \
+  <span class="az-flag">--enable-hierarchical-namespace</span> <span class="az-str">true</span> \
+  <span class="az-flag">--https-only</span> <span class="az-str">true</span> \
+  <span class="az-flag">--min-tls-version</span> <span class="az-str">TLS1_2</span> \
+  <span class="az-flag">--allow-blob-public-access</span> <span class="az-str">false</span>`,
+      cost:'Hot: €0.018/GB/month. Cool: €0.01. Archive: €0.00099. Egress within EU: €0.07/GB.',
+      risk:'Enabling public blob access on storage accounts containing PII. Set --allow-blob-public-access false at account creation and enforce via Azure Policy.',
+    },
+    {
+      id:'sql', title:'Azure SQL: Database vs Managed Instance vs SQL Server on VM',
+      badge:'Relational DB', gdpr:true,
+      analogy:'Azure SQL Database is the fully managed option — Microsoft handles patching, backups, HA. Managed Instance gives you near 100% SQL Server compatibility for migrations from on-prem without rewriting queries. SQL Server on VM is full control — you manage everything, including patching. Choose the most managed option your workload allows.',
+      code:`<span class="az-cmt">-- Azure SQL: enable Transparent Data Encryption (on by default)</span>
+<span class="az-kw">ALTER DATABASE</span> <span class="az-res">AnalyticsDB</span>
+<span class="az-kw">SET</span> ENCRYPTION <span class="az-kw">ON</span>;
+
+<span class="az-cmt">-- Enable Auditing to Log Analytics (GDPR Art. 30 — record of processing)</span>
+<span class="az-kw">EXEC</span> sp_set_database_firewall_rule
+    <span class="az-flag">@name</span> = <span class="az-str">N'AllowAzureServices'</span>,
+    <span class="az-flag">@start_ip_address</span> = <span class="az-str">'0.0.0.0'</span>,
+    <span class="az-flag">@end_ip_address</span> = <span class="az-str">'0.0.0.0'</span>;`,
+      cost:'General Purpose 2 vCores: ~€260/mo. Serverless: auto-pause after inactivity, from €0.54/vCore-hr. Basic 5 DTU: ~€14/mo.',
+      risk:'Using SQL Server on VM without automatic patching enabled. SQL Server CVEs are frequent; unpatched instances on public internet are the most common breach vector.',
+    },
+    {
+      id:'cosmos', title:'Cosmos DB — when it makes sense',
+      badge:'NoSQL', gdpr:true,
+      analogy:'Cosmos DB is a globally distributed, multi-model database with single-digit millisecond reads anywhere in the world. It makes sense when you need a user profile store for a real-time personalisation engine, or a product catalogue that must respond in < 10ms globally. It does not make sense as a replacement for Azure SQL for analytical queries.',
+      code:`<span class="az-cmt"># Create Cosmos DB account (serverless, EU regions)</span>
+<span class="az-kw">az</span> cosmosdb <span class="az-flag">create</span> \
+  <span class="az-flag">--name</span> <span class="az-str">cosmos-mktg-prod</span> \
+  <span class="az-flag">--resource-group</span> <span class="az-str">rg-analytics-prod-001</span> \
+  <span class="az-flag">--locations</span> <span class="az-str">regionName=northeurope</span> <span class="az-str">regionName=westeurope</span> \
+  <span class="az-flag">--capabilities</span> <span class="az-str">EnableServerless</span> \
+  <span class="az-flag">--default-consistency-level</span> <span class="az-str">Session</span>`,
+      cost:'Serverless: €0.25/million RUs + €0.25/GB. Provisioned: from €0.008/100 RU/hr. Multi-region write adds ~25% cost.',
+      risk:'Using Cosmos DB for analytics queries (SELECT *, aggregations, joins). Cosmos is optimised for point reads by partition key. Use Synapse Link to analytical queries against Cosmos data without RU consumption.',
+    },
+  ];
+  return (
+    <div className="fade-up">
+      <SectionTitle>Storage & Databases</SectionTitle>
+      <p className="text-sm text-gray-400 mb-5 max-w-2xl">The right storage tier is the one that matches your access pattern. Wrong choices here compound into the biggest unexpected bills on Azure.</p>
+      {items.map(s => (
+        <ServiceCard key={s.id} title={s.title} badge={s.badge} gdpr={s.gdpr}>
+          <p className="text-sm text-gray-300 mb-3" style={{borderLeft:'3px solid #13d6c1',paddingLeft:'12px',fontStyle:'italic'}}>{s.analogy}</p>
+          <button onClick={() => setOpen(open===s.id?null:s.id)} className="text-xs font-mono text-teal-DEFAULT hover:text-white transition-colors mb-2" style={{background:'none',border:'none',cursor:'pointer',padding:0}}>
+            {open===s.id?'▾ collapse':'▸ code + costs'}
+          </button>
+          {open===s.id && (
+            <div className="fade-up">
+              <CodeBlock>{s.code}</CodeBlock>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                <div className="rounded-lg p-3" style={{background:'#064e3b20',border:'1px solid #10b98140'}}><Label>Cost</Label><p className="text-xs text-green-300">{s.cost}</p></div>
+                <div className="rounded-lg p-3" style={{background:'#7f1d1d20',border:'1px solid #ef444440'}}><Label>Common mistake</Label><p className="text-xs text-red-300">{s.risk}</p></div>
+              </div>
+            </div>
+          )}
+        </ServiceCard>
+      ))}
+    </div>
+  );
+}
+
+function CasesTab() {
+  const [open, setOpen] = useState(null);
+  const cases = [
+    {
+      id:'mdw', title:'Modern Data Warehouse — Retail Analytics',
+      badge:'Data & BI', gdpr:true,
+      context:'Dublin-based retailer with 12 stores. Data sources: POS system (SQL Server on-prem), e-commerce platform (REST API), Google Ads and Meta Ads. Goal: single Power BI dashboard refreshing daily, with campaign ROI visible next to in-store sales.',
+      stack:'Azure Data Factory (ingest) → ADLS Gen2 (raw + curated zones) → Azure Synapse Serverless SQL (transform + views) → Power BI DirectQuery',
+      outcome:'Replaced 4 manually maintained Excel files. Reduced time-to-insight from 3 days to 4 hours. All data stays in northeurope region (Dublin) — GDPR data residency documented.',
+      code:`<span class="az-cmt">-- Synapse: join ad spend with POS sales by date</span>
+<span class="az-kw">SELECT</span>
+    a.campaign_name,
+    a.channel,
+    <span class="az-teal">SUM</span>(a.spend)       <span class="az-kw">AS</span> ad_spend,
+    <span class="az-teal">SUM</span>(s.revenue)     <span class="az-kw">AS</span> in_store_revenue,
+    <span class="az-teal">ROUND</span>(<span class="az-teal">SUM</span>(s.revenue)/<span class="az-teal">NULLIF</span>(<span class="az-teal">SUM</span>(a.spend),<span class="az-num">0</span>),<span class="az-num">2</span>) <span class="az-kw">AS</span> roas
+<span class="az-kw">FROM</span> <span class="az-res">curated</span>.<span class="az-teal">ad_performance</span> a
+<span class="az-kw">JOIN</span> <span class="az-res">curated</span>.<span class="az-teal">pos_sales</span> s
+  <span class="az-kw">ON</span> a.report_date = s.sale_date
+<span class="az-kw">GROUP BY</span> a.campaign_name, a.channel;`,
+    },
+    {
+      id:'gdprarch', title:'GDPR-Compliant Customer Data Architecture',
+      badge:'Privacy Engineering', gdpr:true,
+      context:'Irish fintech company, FCA/CBI regulated. Stores customer transaction data. DPC audit risk is non-trivial. Must demonstrate data minimisation, purpose limitation, and right to erasure.',
+      stack:'Azure SQL Database (pseudonymised operational data) → Azure Key Vault (encryption keys per customer) → ADLS Gen2 (analytics, no PII) → Azure Purview (data catalogue + GDPR article mapping) → Azure Policy (EU-only regions enforced)',
+      outcome:'Right to erasure implemented: delete customer key in Key Vault → all data becomes unreadable. Purview catalogue maps every column to GDPR article. Audit trail via Azure Monitor.',
+      code:`<span class="az-cmt">-- Right to erasure via Always Encrypted + key deletion pattern</span>
+<span class="az-cmt">-- Customer PII encrypted with per-customer CEK stored in Key Vault</span>
+<span class="az-kw">CREATE TABLE</span> <span class="az-res">dbo</span>.<span class="az-teal">customers</span> (
+    customer_id  <span class="az-teal">UNIQUEIDENTIFIER</span> <span class="az-kw">DEFAULT</span> <span class="az-teal">NEWID</span>() <span class="az-kw">PRIMARY KEY</span>,
+    email        <span class="az-teal">NVARCHAR</span>(<span class="az-num">256</span>) <span class="az-kw">ENCRYPTED WITH</span> (
+        COLUMN_ENCRYPTION_KEY = cek_customer,
+        ENCRYPTION_TYPE = <span class="az-teal">Deterministic</span>,
+        ALGORITHM = <span class="az-str">'AEAD_AES_256_CBC_HMAC_SHA_256'</span>
+    ),
+    pseudonym_id <span class="az-teal">UNIQUEIDENTIFIER</span> <span class="az-kw">DEFAULT</span> <span class="az-teal">NEWID</span>()
+    <span class="az-cmt">-- pseudonym_id used in analytics tables — no PII link</span>
+);`,
+    },
+    {
+      id:'ads', title:'Campaign Analytics Pipeline — Microsoft Ads + Meta',
+      badge:'Marketing Tech', gdpr:true,
+      context:'B2B SaaS company based in Dublin. Marketing team runs campaigns on Microsoft Ads and Meta. Attribution is a problem: sales cycle is 90 days. Need a pipeline that joins paid media data with CRM deal stages.',
+      stack:'ADF (Microsoft Ads connector + Meta Marketing API) → ADLS Gen2 → Synapse Spark (attribution modelling, data-driven Shapley values) → Azure SQL (results) → Power BI',
+      outcome:'Replaced last-click attribution. Found LinkedIn Ads contributed 3x more pipeline than Google Ads despite lower click volume. Budget reallocated. No PII sent to cloud — hashed emails only.',
+      code:`<span class="az-cmt"># Synapse Spark: Shapley-based attribution (simplified)</span>
+<span class="az-kw">from</span> pyspark.sql <span class="az-kw">import</span> functions <span class="az-kw">as</span> F
+<span class="az-kw">from</span> pyspark.sql.window <span class="az-kw">import</span> Window
+
+df = spark.read.parquet(<span class="az-str">"abfss://curated@lake.dfs.core.windows.net/touchpoints"</span>)
+
+w = Window.partitionBy(<span class="az-str">"conversion_id"</span>).orderBy(<span class="az-str">"event_timestamp"</span>)
+df = df.withColumn(<span class="az-str">"position"</span>, F.row_number().over(w))
+df = df.withColumn(<span class="az-str">"total_touches"</span>, F.count(<span class="az-str">"*"</span>).over(
+    Window.partitionBy(<span class="az-str">"conversion_id"</span>)))
+<span class="az-cmt"># Equal credit per touch as proxy (full Shapley requires ML model)</span>
+df = df.withColumn(<span class="az-str">"credit"</span>, F.lit(<span class="az-num">1</span>) / F.col(<span class="az-str">"total_touches"</span>))`,
+    },
+  ];
+  return (
+    <div className="fade-up">
+      <SectionTitle>Real-World Cases</SectionTitle>
+      <p className="text-sm text-gray-400 mb-5 max-w-2xl">Three architectures from the Irish and EU market — each built around GDPR compliance as a constraint, not an afterthought.</p>
+      {cases.map(c => (
+        <ServiceCard key={c.id} title={c.title} badge={c.badge} gdpr={c.gdpr}>
+          <div className="space-y-2 mb-3">
+            <div><Label>Context</Label><p className="text-sm text-gray-300">{c.context}</p></div>
+            <div><Label>Stack</Label><p className="text-xs font-mono text-teal-DEFAULT">{c.stack}</p></div>
+            {c.outcome && <div><Label>Outcome</Label><p className="text-sm text-gray-300">{c.outcome}</p></div>}
+          </div>
+          <button onClick={() => setOpen(open===c.id?null:c.id)} className="text-xs font-mono text-teal-DEFAULT hover:text-white transition-colors" style={{background:'none',border:'none',cursor:'pointer',padding:0}}>
+            {open===c.id?'▾ hide code':'▸ show code'}
+          </button>
+          {open===c.id && <div className="fade-up mt-3"><CodeBlock>{c.code}</CodeBlock></div>}
+        </ServiceCard>
+      ))}
+    </div>
+  );
+}
+
+function CheatSheetTab() {
+  const [copied, setCopied] = useState(null);
+  const commands = [
+    { cat:'Resource Management', cmd:`az group create --name rg-analytics-prod --location northeurope`, desc:'Create resource group in Ireland' },
+    { cat:'Resource Management', cmd:`az group list --output table`, desc:'List all resource groups' },
+    { cat:'Resource Management', cmd:`az resource list --resource-group rg-analytics-prod --output table`, desc:'List resources in a group' },
+    { cat:'Storage', cmd:`az storage account create --name mystorageacc --resource-group rg-analytics-prod --sku Standard_LRS --enable-hierarchical-namespace true`, desc:'Create ADLS Gen2 account' },
+    { cat:'Storage', cmd:`az storage fs create --name raw --account-name mystorageacc --auth-mode login`, desc:'Create file system container' },
+    { cat:'SQL', cmd:`az sql db create --name AnalyticsDB --server my-sql-server --resource-group rg-analytics-prod --tier GeneralPurpose --compute-model Serverless --auto-pause-delay 60`, desc:'Create serverless Azure SQL DB' },
+    { cat:'Policy', cmd:`az policy assignment list --scope "/subscriptions/{sub}" --output table`, desc:'List active policy assignments' },
+    { cat:'RBAC', cmd:`az role assignment list --assignee user@domain.com --output table`, desc:'List role assignments for a user' },
+    { cat:'RBAC', cmd:`az role assignment create --assignee {objectId} --role "Storage Blob Data Reader" --scope "/subscriptions/{sub}/resourceGroups/rg-analytics-prod"`, desc:'Assign least-privilege storage role' },
+    { cat:'Synapse', cmd:`az synapse workspace create --name synapse-analytics-prod --resource-group rg-analytics-prod --storage-account mystorageacc --file-system curated --location northeurope --sql-admin-login-user sqladmin`, desc:'Create Synapse workspace' },
+    { cat:'Synapse', cmd:`az synapse sql pool pause --name DedicatedPool --workspace-name synapse-analytics-prod --resource-group rg-analytics-prod`, desc:'Pause Dedicated SQL Pool (save cost)' },
+    { cat:'Functions', cmd:`az functionapp create --name fn-webhook-prod --resource-group rg-analytics-prod --runtime python --runtime-version 3.11 --functions-version 4 --os-type linux --consumption-plan-location northeurope`, desc:'Create Python Function App (consumption)' },
+    { cat:'Key Vault', cmd:`az keyvault create --name kv-analytics-prod --resource-group rg-analytics-prod --location northeurope --enable-purge-protection true --enable-soft-delete true`, desc:'Create Key Vault with GDPR-required settings' },
+    { cat:'Monitoring', cmd:`az monitor log-analytics workspace create --resource-group rg-analytics-prod --workspace-name law-analytics-prod --location northeurope`, desc:'Create Log Analytics workspace' },
+    { cat:'ADF', cmd:`az datafactory pipeline create --factory-name adf-analytics-prod --resource-group rg-analytics-prod --pipeline-name pl_ingest_campaigns --pipeline @pipeline.json`, desc:'Create ADF pipeline from JSON' },
+  ];
+  const cats = [...new Set(commands.map(c=>c.cat))];
+  const [filter, setFilter] = useState('all');
+
+  function copy(cmd) {
+    navigator.clipboard.writeText(cmd).catch(()=>{});
+    setCopied(cmd);
+    setTimeout(()=>setCopied(null),1500);
+  }
+
+  const filtered = filter==='all' ? commands : commands.filter(c=>c.cat===filter);
+
+  return (
+    <div className="fade-up">
+      <SectionTitle>Cheat Sheet</SectionTitle>
+      <p className="text-sm text-gray-400 mb-5">15 Azure CLI commands used in analytics and data engineering contexts. Click to copy.</p>
+
+      <div className="flex flex-wrap gap-2 mb-5">
+        {['all',...cats].map(c => (
+          <button key={c} onClick={()=>setFilter(c)}
+            className={`text-xs font-mono px-3 py-1 rounded-full border transition-all cursor-pointer ${filter===c?'border-teal-DEFAULT text-teal-DEFAULT bg-navy':'border-gray-700 text-gray-400 hover:border-gray-500'}`}
+            style={{background: filter===c?'#1d085e20':'transparent'}}>
+            {c}
+          </button>
+        ))}
+      </div>
+
+      <div className="space-y-2">
+        {filtered.map((c,i) => (
+          <div key={i} className="service-card p-3 flex flex-col gap-1.5">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <span className="text-xs font-mono px-2 py-0.5 rounded border border-purple-400/40 text-purple-300 bg-purple-900/10 mr-2">{c.cat}</span>
+                <span className="text-xs text-gray-400">{c.desc}</span>
+              </div>
+              <button onClick={()=>copy(c.cmd)}
+                className="text-xs font-mono px-2 py-0.5 rounded transition-colors flex-shrink-0"
+                style={{background: copied===c.cmd?'#064e3b':'#1d085e', border:'1px solid', borderColor: copied===c.cmd?'#10b981':'#13d6c1', color: copied===c.cmd?'#10b981':'#13d6c1', cursor:'pointer'}}>
+                {copied===c.cmd?'✓':'copy'}
+              </button>
+            </div>
+            <code className="text-xs font-mono text-teal-DEFAULT block overflow-x-auto" style={{fontFamily:"'DM Mono',monospace", wordBreak:'break-all'}}>{c.cmd}</code>
+          </div>
+        ))}
+      </div>
+
+      {/* Naming conventions */}
+      <div className="service-card p-5 mt-6">
+        <h3 className="text-base font-semibold text-teal-DEFAULT mb-3">Naming conventions for Azure resources</h3>
+        <div className="code-block">
+          <span className="az-cmt"># Pattern: {type}-{workload}-{environment}-{sequence}</span>{'\n'}
+          <span className="az-teal">rg</span>-analytics-<span className="az-str">prod</span>-001       <span className="az-cmt"># Resource Group</span>{'\n'}
+          <span className="az-teal">st</span>datalakeprod001         <span className="az-cmt"># Storage (no hyphens, 3–24 chars)</span>{'\n'}
+          <span className="az-teal">syn</span>-analytics-<span className="az-str">prod</span>-001    <span className="az-cmt"># Synapse workspace</span>{'\n'}
+          <span className="az-teal">adf</span>-analytics-<span class="az-str">prod</span>-001    <span className="az-cmt"># Azure Data Factory</span>{'\n'}
+          <span className="az-teal">kv</span>-analytics-<span className="az-str">prod</span>-001      <span className="az-cmt"># Key Vault (3–24 chars)</span>{'\n'}
+          <span className="az-teal">fn</span>-ingest-campaigns-<span className="az-str">prod</span>  <span className="az-cmt"># Function App</span>{'\n'}
+          <span className="az-teal">law</span>-analytics-<span className="az-str">prod</span>-001    <span className="az-cmt"># Log Analytics Workspace</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   PHASE 5 — TCO CALCULATOR + GDPR SECTION + COMPARE + QUIZ
+   ============================================================ */
+function TCOCalculator() {
+  const [gb, setGb] = useState(500);
+  const [users, setUsers] = useState(20);
+  const [queries, setQueries] = useState(5000);
+
+  // On-prem: server hardware amortised + licences + admin
+  const onPremBase = 1200;
+  const onPremPerGB = 0.5;
+  const onPremPerUser = 15;
+  const onPrem = Math.round(onPremBase + gb * onPremPerGB + users * onPremPerUser);
+
+  // Azure SQL Database (General Purpose serverless)
+  const azSqlBase = 14;
+  const azSqlPerGB = 0.115;
+  const azSqlCompute = Math.round(users * 4.2); // compute scales with concurrency
+  const azSql = Math.round(azSqlBase + gb * azSqlPerGB + azSqlCompute);
+
+  // Azure Synapse Serverless (pay per scan)
+  const scanTB = (queries * 0.00002 * gb) / 1000; // rough estimate: 20KB avg scan ratio of total GB
+  const synBase = 0;
+  const synPerScan = scanTB * 4.65;
+  const synStorage = gb * 0.018;
+  const synapse = Math.round(synBase + synPerScan + synStorage + 30); // 30 = ADF orchestration
+
+  const max = Math.max(onPrem, azSql, synapse, 1);
+  const bars = [
+    { label:'On-Premises SQL Server', val:onPrem, color:'#4c3aaa' },
+    { label:'Azure SQL Database',      val:azSql,  color:'#13d6c1' },
+    { label:'Synapse Serverless + ADF',val:synapse, color:'#0a9a88' },
+  ];
+
+  return (
+    <div className="service-card p-5">
+      <div className="flex items-center gap-2 mb-4">
+        <h3 className="text-base font-semibold text-teal-DEFAULT">TCO Calculator</h3>
+        <span className="gdpr-badge">Estimated monthly cost</span>
+      </div>
+      <p className="text-xs text-gray-400 mb-4">On-premises SQL Server vs Azure SQL vs Synapse Serverless. Estimates only — for illustration. Adjust parameters below.</p>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        {[
+          { label:'Data volume (GB)', val:gb, min:50, max:5000, step:50, set:setGb },
+          { label:'Analyst users',   val:users, min:1, max:100, step:1, set:setUsers },
+          { label:'Queries / day',   val:queries, min:100, max:50000, step:500, set:setQueries },
+        ].map(s => (
+          <div key={s.label}>
+            <div className="flex justify-between mb-1">
+              <Label>{s.label}</Label>
+              <span className="text-xs font-mono text-teal-DEFAULT">{s.val.toLocaleString()}</span>
+            </div>
+            <input type="range" min={s.min} max={s.max} step={s.step} value={s.val}
+              onChange={e => s.set(Number(e.target.value))} />
+          </div>
+        ))}
+      </div>
+
+      <div className="space-y-3">
+        {bars.map(b => (
+          <div key={b.label}>
+            <div className="flex justify-between mb-1">
+              <span className="text-xs text-gray-300">{b.label}</span>
+              <span className="text-sm font-bold font-mono" style={{color:b.color}}>€{b.val.toLocaleString()}/mo</span>
+            </div>
+            <div className="h-5 rounded-full overflow-hidden" style={{background:'#221b56'}}>
+              <div className="h-full rounded-full transition-all duration-500"
+                style={{width:`${Math.max(3, (b.val/max)*100)}%`, background:b.color, opacity:.85}} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="text-xs text-gray-500 mt-4">On-prem estimate includes: hardware amortisation, SQL Server licence, storage, DBA cost (partial). Azure estimates: compute + storage + egress. Actual costs vary by SKU, reserved pricing, and workload profile.</p>
+    </div>
+  );
+}
+
+function GDPRSection() {
+  return (
+    <div className="service-card p-5" style={{border:'1px solid #10b981'}}>
+      <div className="flex items-center gap-2 mb-4">
+        <h3 className="text-base font-semibold" style={{color:'#10b981'}}>Azure & GDPR in Ireland — what actually matters</h3>
+        <span className="gdpr-badge">DPC context</span>
+      </div>
+      <p className="text-sm text-gray-300 mb-4">Ireland is home to the DPC, which acts as Lead Supervisory Authority for Meta, Google, Apple, LinkedIn and TikTok across the EU. Companies operating in Ireland or handling EU citizen data face DPC enforcement as the primary risk. Azure's position in this context is structural.</p>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        {[
+          { title:'EU Data Boundary', text:'Since Jan 2023, Azure\'s EU Data Boundary commits to processing and storing EU/EEA customer data within EU borders — including logs, support interactions and telemetry. AWS and GCP offer regional data residency for customer content but do not match this scope for operational data.', icon:'🛡️' },
+          { title:'Recommended EU regions', text:'northeurope (Dublin, Ireland) and westeurope (Netherlands) are the primary pair for EU data residency. swedencentral is available for data sovereignty requirements. Enforce via Azure Policy AllowedLocations at management group scope.', icon:'🌍' },
+          { title:'Azure Policy for GDPR', text:'Built-in initiative: GDPR (EU General Data Protection Regulation) contains 33 policies covering encryption at rest, HTTPS enforcement, audit logging, and network isolation. Assign at subscription level; set to Deny mode in production.', icon:'📋' },
+          { title:'Data residency vs AWS/GCP', text:'AWS: customer data stays in region by default, but CloudTrail and support data can cross regions. GCP: similar to AWS. Azure EU Data Boundary covers all three categories. For EU-regulated companies (financial services, health), this distinction matters in audit responses.', icon:'⚖️' },
+        ].map(item => (
+          <div key={item.title} className="rounded-lg p-4" style={{background:'#064e3b15',border:'1px solid #10b98130'}}>
+            <p className="text-sm font-semibold mb-1" style={{color:'#10b981'}}>{item.icon} {item.title}</p>
+            <p className="text-xs text-gray-300">{item.text}</p>
+          </div>
+        ))}
+      </div>
+
+      <CodeBlock>{`<span class="az-cmt"># Assign GDPR built-in initiative at subscription scope</span>
+<span class="az-kw">az</span> policy assignment <span class="az-flag">create</span> \
+  <span class="az-flag">--name</span>            <span class="az-str">"GDPR-initiative-prod"</span> \
+  <span class="az-flag">--scope</span>           <span class="az-str">"/subscriptions/{sub}"</span> \
+  <span class="az-flag">--policy-set-definition</span> <span class="az-str">"179d1daa-458f-4e47-8086-2a68d0d6c38f"</span> \
+  <span class="az-flag">--enforcement-mode</span> <span class="az-str">Default</span>
+<span class="az-cmt"># Pair with Defender for Cloud Standard tier for continuous assessment</span>`}</CodeBlock>
+    </div>
+  );
+}
+
+function CompareTable() {
+  const rows = [
+    { criterion:'GDPR data residency (all data)', az:'EU Data Boundary (all data including logs)', aws:'Customer data by region; logs may leave EU', gcp:'Customer data by region; operational data variable', winner:'az' },
+    { criterion:'M365 integration', az:'Native (same Entra ID, same tenant, Direct Lake)', aws:'Via third-party connectors or API', gcp:'Via BigQuery connectors, no native M365', winner:'az' },
+    { criterion:'Dominant enterprise footprint in Ireland/EU', az:'Yes — Azure + M365 dominant in EU enterprise', aws:'Growing; strong in startups and cloud-native', gcp:'Strong in data/ML; lower enterprise footprint in EU', winner:'az' },
+    { criterion:'Analytics breadth', az:'Synapse + Fabric + Power BI + Databricks', aws:'Redshift + Glue + QuickSight + EMR', gcp:'BigQuery + Dataflow + Looker + Vertex AI', winner:'neutral' },
+    { criterion:'Serverless data warehouse', az:'Synapse Serverless SQL (€4.65/TB)', aws:'Athena (€4.65/TB)', gcp:'BigQuery on-demand (€5.74/TB)', winner:'neutral' },
+    { criterion:'ML platform maturity', az:'Azure ML + Azure OpenAI Service', aws:'SageMaker (most mature)', gcp:'Vertex AI (strong for LLMs)', winner:'aws' },
+    { criterion:'Egress cost (EU → Internet)', az:'€0.069/GB after 100 GB/mo free', aws:'€0.086/GB after 100 GB/mo free', gcp:'€0.085/GB after 200 GB/mo free', winner:'az' },
+    { criterion:'Local partner ecosystem in Ireland', az:'Very strong (Microsoft Gold Partners)', aws:'Growing (Accenture, Deloitte)', gcp:'Limited local SI presence', winner:'az' },
+  ];
+
+  const cols = [
+    {key:'criterion', label:'Criterion'},
+    {key:'az', label:'Azure'},
+    {key:'aws', label:'AWS'},
+    {key:'gcp', label:'GCP'},
+  ];
+
+  return (
+    <div className="service-card p-5 overflow-x-auto">
+      <h3 className="text-base font-semibold text-teal-DEFAULT mb-4">Azure vs AWS vs GCP — EU/Ireland context</h3>
+      <table className="cmp-table">
+        <thead>
+          <tr>{cols.map(c => <th key={c.key}>{c.label}</th>)}</tr>
+        </thead>
+        <tbody>
+          {rows.map((r,i) => (
+            <tr key={i}>
+              <td className="text-gray-300 font-semibold text-xs">{r.criterion}</td>
+              <td className={r.winner==='az'?'winner':r.winner==='neutral'?'neutral':''}>{r.az}</td>
+              <td className={r.winner==='aws'?'winner':r.winner==='neutral'?'neutral':''}>{r.aws}</td>
+              <td className={r.winner==='gcp'?'winner':r.winner==='neutral'?'neutral':''}>{r.gcp}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className="text-xs text-gray-500 mt-3">Green = strongest for that criterion in EU/Ireland context. Yellow = comparable. Sources: Azure pricing, AWS pricing, GCP pricing (April 2026). Cloud pricing changes frequently — verify before budget decisions.</p>
+    </div>
+  );
+}
+
+function Quiz() {
+  const questions = [
+    {
+      q:'A Dublin-based fintech must ensure EU citizen data never leaves the EU, including support logs and telemetry. Which Azure feature addresses this?',
+      opts:['Azure Private Endpoint','Azure EU Data Boundary','Azure Policy AllowedLocations','RBAC at subscription scope'],
+      correct:1,
+      explanation:'Azure EU Data Boundary (launched 2023) covers customer data, logs, support interactions and telemetry within EU/EEA — the broadest scope of any hyperscaler commitment.'
+    },
+    {
+      q:'Your Power BI reports refresh every night and occasionally fail at 7am. You want real-time data without scheduled refreshes. What is the correct approach with Azure Synapse?',
+      opts:['Import mode with 30-minute refresh','DirectQuery to Synapse Dedicated SQL Pool','DirectQuery to Synapse Serverless SQL Pool over curated ADLS Gen2','Export to CSV and load to Power BI dataset'],
+      correct:2,
+      explanation:'Serverless SQL Pool provides DirectQuery over Parquet/Delta files in ADLS Gen2 without a data warehouse copy. No refresh latency, charged per TB scanned.'
+    },
+    {
+      q:'You need to deploy resources only in Irish and Dutch Azure regions across all subscriptions. What is the correct governance layer?',
+      opts:['Tag each resource group manually','Azure RBAC with custom role','Azure Policy assignment at Management Group scope','Conditional Access policy in Entra ID'],
+      correct:2,
+      explanation:'Azure Policy AllowedLocations assigned at Management Group scope enforces the constraint across all child subscriptions automatically, with Deny effect blocking non-compliant deployments.'
+    },
+    {
+      q:'Which Azure service should you use for a Python webhook handler that runs for 200ms per call, receives 500,000 calls/month, and should scale to zero?',
+      opts:['Azure App Service (Standard S1)','Azure Kubernetes Service','Azure Container Apps','Azure Functions (Consumption plan)'],
+      correct:3,
+      explanation:'Azure Functions Consumption plan is built for short-lived event-driven workloads. First 1M executions are free. Scale-to-zero by design. 500K calls/month = ~€0 in compute cost.'
+    },
+    {
+      q:'A data engineer wants to call GPT-4o for sentiment classification on customer support tickets. The company\'s GDPR DPA requires data to stay in EU and not train OpenAI\'s models. What is the correct service?',
+      opts:['OpenAI API with VPN routing through Ireland','Azure OpenAI Service (westeurope deployment)','Azure AI Language service (built-in sentiment)','Neither — LLMs cannot be used under GDPR'],
+      correct:1,
+      explanation:'Azure OpenAI Service deploys GPT-4o inside your Azure subscription in your chosen EU region. Customer data does not train OpenAI models. For simpler sentiment tasks, Azure AI Language is cheaper — but Azure OpenAI is the compliant LLM path.'
+    },
+  ];
+
+  const [current, setCurrent] = useState(0);
+  const [selected, setSelected] = useState(null);
+  const [answers, setAnswers] = useState([]);
+  const [done, setDone] = useState(false);
+
+  function pick(idx) {
+    if (selected !== null) return;
+    setSelected(idx);
+  }
+
+  function next() {
+    const correct = selected === questions[current].correct;
+    const newAnswers = [...answers, { selected, correct }];
+    setAnswers(newAnswers);
+    if (current + 1 >= questions.length) {
+      setDone(true);
+    } else {
+      setCurrent(c => c + 1);
+      setSelected(null);
+    }
+  }
+
+  function reset() {
+    setCurrent(0); setSelected(null); setAnswers([]); setDone(false);
+  }
+
+  const score = answers.filter(a => a.correct).length;
+  const q = questions[current];
+
+  return (
+    <div className="service-card p-5">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-base font-semibold text-teal-DEFAULT">Knowledge Check — 5 Questions</h3>
+        {!done && <span className="text-xs font-mono text-gray-400">{current+1} / {questions.length}</span>}
+      </div>
+
+      {done ? (
+        <div className="fade-up text-center py-6">
+          <p className="text-4xl font-extrabold mb-2" style={{color: score>=4?'#10b981':score>=3?'#fbbf24':'#f87171'}}>{score}/5</p>
+          <p className="text-sm text-gray-300 mb-4">{score===5?'Perfect score. Azure-ready.':score>=3?'Solid foundation. Review the explanations above.':'Go through the lab modules again — especially GDPR and compute.'}</p>
+          <button onClick={reset} className="text-sm font-semibold px-5 py-2 rounded-lg transition-all"
+            style={{background:'#1d085e',border:'1px solid #13d6c1',color:'#13d6c1',cursor:'pointer'}}>
+            Retry
+          </button>
+          <div className="flex justify-center gap-2 mt-4">
+            {answers.map((a,i) => (
+              <span key={i} className="text-lg">{a.correct?'✅':'❌'}</span>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="fade-up">
+          <p className="text-sm font-semibold text-white mb-4">{q.q}</p>
+          <div className="space-y-2 mb-4">
+            {q.opts.map((opt, i) => {
+              let cls = 'quiz-opt';
+              if (selected !== null) {
+                if (i === q.correct) cls += ' correct';
+                else if (i === selected && i !== q.correct) cls += ' wrong';
+              }
+              return (
+                <div key={i} className={cls} onClick={() => pick(i)}>
+                  <span className="text-xs font-mono mr-2 opacity-50">{String.fromCharCode(65+i)}.</span>{opt}
+                </div>
+              );
+            })}
+          </div>
+          {selected !== null && (
+            <div className="fade-up rounded-lg p-3 mb-4" style={{background:'#1a1250',border:'1px solid #2a2060'}}>
+              <p className="text-xs text-gray-300"><span className="font-semibold" style={{color: selected===q.correct?'#10b981':'#f87171'}}>{selected===q.correct?'Correct. ':'Incorrect. '}</span>{q.explanation}</p>
+            </div>
+          )}
+          <button onClick={next} disabled={selected===null}
+            className="text-sm font-semibold px-5 py-2 rounded-lg transition-all"
+            style={{background: selected!==null?'#1d085e':'#0e0829', border:'1px solid', borderColor: selected!==null?'#13d6c1':'#2a2060', color: selected!==null?'#13d6c1':'#4a4a6a', cursor: selected!==null?'pointer':'not-allowed'}}>
+            {current+1===questions.length?'See results →':'Next →'}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* Wrapper component rendered inside the tab routing */
+function FundamentalsTabWithExtras() {
+  return (
+    <>
+      <FundamentalsTab />
+      <div className="mt-6"><TCOCalculator /></div>
+    </>
+  );
+}
+
+/* Override the App tab renderer to inject TCO, GDPR, Compare, Quiz */
+/* We inject these into the Cases tab as additional sections */
+function CasesTabFull() {
+  return (
+    <>
+      <CasesTab />
+      <div className="mt-6"><GDPRSection /></div>
+      <div className="mt-6"><CompareTable /></div>
+      <div className="mt-6"><Quiz /></div>
+    </>
+  );
+}
+
+/* ============================================================
+   APP SHELL
+   ============================================================ */
+function App() {
+  const [tab, setTab] = useState('fundamentals');
+
+  function renderTab() {
+    switch(tab) {
+      case 'fundamentals': return <><FundamentalsTab /><div className="mt-6"><TCOCalculator /></div></>;
+      case 'data':         return <DataTab />;
+      case 'm365':         return <M365Tab />;
+      case 'compute':      return <ComputeTab />;
+      case 'ai':           return <AITab />;
+      case 'storage':      return <StorageTab />;
+      case 'cases':        return <><CasesTab /><div className="mt-6"><GDPRSection /></div><div className="mt-6"><CompareTable /></div><div className="mt-6"><Quiz /></div></>;
+      case 'cheatsheet':   return <CheatSheetTab />;
+      default:             return null;
+    }
+  }
+
+  function Placeholder({ name }) {
+    return <div className="text-gray-500 py-20 text-center font-mono text-sm">// {name} — loading…</div>;
+  }
+
+  return (
+    <div className="min-h-screen">
+
+      {/* ---- HERO ---- */}
+      <header className="relative overflow-hidden" style={{background:'linear-gradient(135deg,#0a0520 0%,#1a0a50 50%,#0a1a40 100%)'}}>
+        <div className="absolute inset-0 opacity-10" style={{backgroundImage:'radial-gradient(circle at 30% 50%,#13d6c1 0%,transparent 50%),radial-gradient(circle at 80% 20%,#1d085e 0%,transparent 50%)'}} />
+        <div className="relative max-w-5xl mx-auto px-4 py-10">
+          <a href="https://valescabravo.github.io/"
+             className="inline-flex items-center gap-1.5 text-xs font-mono text-teal-DEFAULT hover:text-white transition-colors mb-6"
+             style={{textDecoration:'none'}}>
+            ← Back to Portfolio
+          </a>
+          <div className="flex flex-wrap items-start gap-3 mb-4">
+            <span className="text-xs font-mono px-2.5 py-1 rounded-full border border-teal-DEFAULT text-teal-DEFAULT" style={{background:'#13d6c120'}}>2026</span>
+            <span className="text-xs font-mono px-2.5 py-1 rounded-full border border-blue-400 text-blue-300" style={{background:'#1d4ed820'}}>Microsoft Azure</span>
+            <span className="gdpr-badge">GDPR EU ✓</span>
+          </div>
+          <h1 className="text-3xl md:text-5xl font-extrabold text-white leading-tight mb-3">
+            Azure Cloud Lab
+          </h1>
+          <p className="text-base md:text-lg text-gray-300 max-w-2xl mb-6">
+            If you already use the Microsoft stack, Azure is not just another cloud — it's the natural extension.
+            This lab explains why and how, from fundamentals to production architectures.
+          </p>
+          <div className="flex flex-wrap gap-3 text-xs font-mono text-gray-400">
+            {['8 Modules','TCO Calculator','Decision Tree','5-Q Quiz','GDPR Focus'].map(t => (
+              <span key={t} className="px-2.5 py-1 rounded-md" style={{background:'#ffffff0d',border:'1px solid #2a2060'}}>{t}</span>
+            ))}
+          </div>
+        </div>
+      </header>
+
+      {/* ---- TAB BAR ---- */}
+      <div className="sticky top-0 z-10" style={{background:'#09071af0',borderBottom:'1px solid #2a2060',backdropFilter:'blur(8px)'}}>
+        <div className="max-w-5xl mx-auto px-4">
+          <div className="tab-scroll flex gap-1.5 py-3">
+            {TABS.map(t => (
+              <button key={t.id}
+                className={`tab-btn${tab===t.id?' active':''}`}
+                onClick={() => setTab(t.id)}>
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ---- CONTENT ---- */}
+      <main className="max-w-5xl mx-auto px-4 py-8">
+        {renderTab()}
+      </main>
+
+      {/* ---- FOOTER ---- */}
+      <footer style={{borderTop:'1px solid #2a2060',marginTop:'4rem',padding:'1.5rem 1rem',textAlign:'center',color:'#6b6890',fontSize:'.78rem',fontFamily:"'DM Mono',monospace"}}>
+        © 2026 Valesca Bravo — Interactive Lab
+      </footer>
+
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>
