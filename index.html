@@ -1441,22 +1441,16 @@ function App() {
       {/* ---- HERO ---- */}
       <header className="relative overflow-hidden" style={{background:'linear-gradient(135deg,#0a0520 0%,#1a0a50 50%,#0a1a40 100%)'}}>
         <div className="absolute inset-0 opacity-10" style={{backgroundImage:'radial-gradient(circle at 30% 50%,#13d6c1 0%,transparent 50%),radial-gradient(circle at 80% 20%,#1d085e 0%,transparent 50%)'}} />
-        <div className="relative max-w-5xl mx-auto px-4 py-10">
+        <div className="flex flex-wrap gap-2 mb-6">
           <a href="https://valescabravo.github.io/"
-             className="inline-flex items-center gap-1.5 text-xs font-mono text-teal-DEFAULT hover:text-white transition-colors mb-6"
-             style={{textDecoration:'none'}}>
-            ← Back to Portfolio
+             style={{textDecoration:'none',border:'1px solid #13d6c1',color:'#13d6c1',background:'#13d6c110',fontFamily:"'DM Mono',monospace",fontSize:'.72rem',padding:'4px 12px',borderRadius:'9999px',display:'inline-flex',alignItems:'center',gap:'6px'}}>
+            ← Portfolio
           </a>
           <a href="https://valescabravo.github.io/lab/"
-             className="inline-flex items-center gap-1.5 text-xs font-mono text-teal-DEFAULT hover:text-white transition-colors mb-6"
-             style={{textDecoration:'none'}}>
-            ← Back to the Lab
+             style={{textDecoration:'none',border:'1px solid #4c3aaa',color:'#c4b5fd',background:'#1d085e30',fontFamily:"'DM Mono',monospace",fontSize:'.72rem',padding:'4px 12px',borderRadius:'9999px',display:'inline-flex',alignItems:'center',gap:'6px'}}>
+            ← Lab
           </a>
-          <div className="flex flex-wrap items-start gap-3 mb-4">
-            <span className="text-xs font-mono px-2.5 py-1 rounded-full border border-teal-DEFAULT text-teal-DEFAULT" style={{background:'#13d6c120'}}>2026</span>
-            <span className="text-xs font-mono px-2.5 py-1 rounded-full border border-blue-400 text-blue-300" style={{background:'#1d4ed820'}}>Microsoft Azure</span>
-            <span className="gdpr-badge">GDPR EU ✓</span>
-          </div>
+        </div>
           <h1 className="text-3xl md:text-5xl font-extrabold text-white leading-tight mb-3">
             Azure Cloud Lab
           </h1>
